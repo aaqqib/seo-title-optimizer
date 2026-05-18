@@ -264,9 +264,8 @@ Respond ONLY with raw JSON — no markdown, no explanation. Structure:
 Rules: titles 50-60 chars, metas 145-160 chars, include keyword naturally, sort by ctr_score descending.`;
 
       try {
-        const res = await fetch("https://api.anthropic.com/v1/messages", {
+        const res = await fetch("/api/chat", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             model: "claude-sonnet-4-6",
             max_tokens: 1000,
