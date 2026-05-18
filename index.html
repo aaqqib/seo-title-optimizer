@@ -265,52 +265,46 @@ Rules: titles 50-60 chars, metas 145-160 chars, include keyword naturally, sort 
 
       try {
         const res = await fetch("/api/chat", {
-          method: "POST",
-          body: JSON.stringify({
-            model: "claude-sonnet-4-6",
-            max_tokens: 1000,
-            messages: [{ role: "user", content: prompt }]
-          })
-        });
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    contents: [
+      {
+        parts: [
+          {
+            text: prompt
+          }
+        ]
+      }
+    ]
+  })
+});
 
-        if (!res.ok) {
-          const errText = await res.text();
-          throw new Error(`API ${res.status}: ${errText}`);
-        }
+if (!res.ok) {
+  const errText = await res.text();
+  throw new Error(`API ${res.status}: ${errText}`);
+}
 
-        const data = await res.json();
-        if (data.error) throw new Error(JSON.stringify(data.error));
+const data = await res.json();
 
-        const raw    = data.content.map(b => b.text || '').join('');
-        const clean  = raw.replace(/```json|```/g, '').trim();
-        const parsed = JSON.parse(clean);
+console.log(data);
 
-        let html = `<div class="results-heading">5 optimized variations</div>`;
-        parsed.variations.forEach((v, i) => {
-          html += `
-          <div class="result-card ${i === 0 ? 'best' : ''}">
-            ${badge(i, v.ctr_score)}
-            <div class="strategy-label">${v.strategy}</div>
-            <div class="serp-title">${v.title}</div>
-            <div class="serp-url">yourwebsite.com › page</div>
-            <div class="serp-desc">${v.meta}</div>
-            <div class="meter"><div class="meter-fill" style="width:${v.ctr_score}%;background:${meterColor(v.ctr_score)};"></div></div>
-            <div class="score-row">
-              <span class="pill">CTR score: ${v.ctr_score}/100</span>
-              ${charPill(v.title.length, 50, 60)}
-              ${charPill(v.meta.length, 145, 160)}
-            </div>
-            <div class="note">${v.notes}</div>
-          </div>`;
-        });
+if (data.error) {
+  throw new Error(JSON.stringify(data.error));
+}
 
-        document.getElementById('output').innerHTML = html;
+// Gemini response parsing
+const raw =
+  data.candidates?.[0]?.content?.parts?.[0]?.text;
 
-      } catch(e) {
-        document.getElementById('output').innerHTML = `<div class="error-box">Error: ${e.message}</div>`;
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Generate 5 optimized variations →';
+if (!raw) {
+  throw new Error("No response returned from Gemini");
+}
+
+const clean = raw.replace(/```json|```/g, '').trim();
+const parsed = JSON.parse(clean);
       }
     }
   </script>
